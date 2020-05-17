@@ -3,7 +3,7 @@ import struct
 from enum import IntEnum
 from typing import Union, Generator, Optional, Tuple, List
 
-from util import skip_first
+from .util import skip_first
 
 
 class OpCode(IntEnum):

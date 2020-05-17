@@ -1,0 +1,3 @@
+[submodule "async-server"]
+	path = async-server
+	url = https://github.com/lgfrbcsgo/wot-async-server
