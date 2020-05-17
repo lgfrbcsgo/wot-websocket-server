@@ -105,7 +105,7 @@ class Frame(object):
         # ------------------------------------------
 
         while len(read_buffer) < 1:
-            read_buffer += yield None
+            read_buffer += yield
 
         fin_mask = 0b10000000
         fin = bool(read_buffer[0] & fin_mask)
@@ -124,7 +124,7 @@ class Frame(object):
         # ------------------------------------------
 
         while len(read_buffer) < 1:
-            read_buffer += yield None
+            read_buffer += yield
 
         masked_mask = 0b10000000
         masked = bool(read_buffer[0] & masked_mask)
@@ -140,14 +140,14 @@ class Frame(object):
 
         if payload_length == 126:
             while len(read_buffer) < 2:
-                read_buffer += yield None
+                read_buffer += yield
 
             payload_length, = struct.unpack('!H', read_buffer[:2])
 
             read_buffer = read_buffer[2:]
         elif payload_length == 127:
             while len(read_buffer) < 4:
-                read_buffer += yield None
+                read_buffer += yield
 
             payload_length, = struct.unpack('!Q', read_buffer[:4])
 
@@ -160,7 +160,7 @@ class Frame(object):
         mask = None
         if masked:
             while len(read_buffer) < 4:
-                read_buffer += yield None
+                read_buffer += yield
 
             mask = Mask(read_buffer[:4])
 
@@ -171,7 +171,7 @@ class Frame(object):
         # ------------------------------------------
 
         while len(read_buffer) < payload_length:
-            read_buffer += yield None
+            read_buffer += yield
 
         payload = read_buffer[:payload_length]
 
