@@ -185,3 +185,6 @@ class Frame(object):
             payload = mask.mask(payload)
 
         yield Frame(fin, op_code, mask, payload), read_buffer
+
+    def __repr__(self):
+        return "Frame({op_code})".format(op_code=self.op_code)
