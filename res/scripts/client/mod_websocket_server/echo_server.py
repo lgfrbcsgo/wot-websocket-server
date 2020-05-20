@@ -1,9 +1,10 @@
 from async import async, await
 from debug_utils import LOG_NOTE
-from mod_async_server import delay
-from mod_websocket_server import WebsocketServer
+from mod_async_server import Server, delay
+from mod_websocket_server import websocket_protocol
 
 
+@websocket_protocol
 @async
 def echo_protocol(server, message_stream):
     host, port = message_stream.peer_addr
@@ -31,7 +32,7 @@ def echo_protocol(server, message_stream):
 @async
 def serve_forever():
     # open server on localhost:4000 using the `echo_protocol` for serving individual connections.
-    with WebsocketServer(echo_protocol, 4000) as server:
+    with Server(echo_protocol, 4000) as server:
         # serve forever, serve once per frame.
         while not server.closed:
             server.poll()

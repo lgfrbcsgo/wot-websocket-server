@@ -10,6 +10,7 @@ from mod_websocket_server.handshake import perform_handshake
 
 
 def encode_utf8(data):
+    # type: (Union[str, unicode]) -> str
     if isinstance(data, str):
         data = data.decode("utf8")
     return data.encode("utf8")
@@ -34,7 +35,7 @@ class MessageStream(object):
     def receive_message(self):
         # type: () -> _Future
         while len(self._incoming_message_queue) == 0:
-            data = yield await(self._stream.read(512))
+            data = yield await(self._stream.receive(512))
             frames = self._frame_parser.send(data)
             for frame in frames:
                 yield await(self._handle_frame(frame))
@@ -82,22 +83,15 @@ class MessageStream(object):
     @async
     def _send_frame(self, frame):
         # type: (Frame) -> _Future
-        yield await(self._stream.write(frame.serialize()))
+        yield await(self._stream.send(frame.serialize()))
 
 
-def wrap_websocket_protocol(websocket_protocol):
-    # type: (Callable[[WebsocketServer, MessageStream], _Future]) -> Callable[[WebsocketServer, Stream], _Future]
+def websocket_protocol(protocol):
+    # type: (Callable[[Server, MessageStream], _Future]) -> Callable[[Server, Stream], _Future]
     @async
     def wrapper(server, stream):
         yield await(perform_handshake(stream))
         message_stream = MessageStream(stream)
-        yield await(websocket_protocol(server, message_stream))
+        yield await(protocol(server, message_stream))
 
     return wrapper
-
-
-class WebsocketServer(Server):
-    def __init__(self, websocket_protocol, port, host="localhost"):
-        # type: (Callable[[WebsocketServer, MessageStream], _Future], int, str) -> None
-        protocol = wrap_websocket_protocol(websocket_protocol)
-        super(WebsocketServer, self).__init__(protocol, port, host)

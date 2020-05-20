@@ -1,1 +1,1 @@
-from mod_websocket_server.websocket_server import MessageStream, WebsocketServer
+from mod_websocket_server.websocket_server import MessageStream, websocket_protocol
