@@ -1,4 +1,4 @@
-from async import async, await
+from async import async, await, delay
 from debug_utils import LOG_NOTE
 from mod_async_server import Server
 from mod_websocket_server.frame import Frame
@@ -6,7 +6,7 @@ from mod_websocket_server.handshake import perform_handshake
 
 
 @async
-def echo(stream):
+def echo(server, stream):
     host, port = stream.peer_addr
     LOG_NOTE("[{host}]:{port} connected".format(host=host, port=port))
     try:
@@ -25,5 +25,6 @@ def echo(stream):
 @async
 def serve():
     with Server(echo, 4000) as server:
-        while True:
-            yield await(server.poll_next_frame())
+        while not server.closed:
+            server.poll()
+            yield await(delay(0))
