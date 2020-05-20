@@ -40,7 +40,7 @@ def perform_handshake(stream):
         raise AssertionError("Unsupported Websocket version")
 
     key = request.headers["sec-websocket-key"]
-    accept = b64encode(sha1(key.encode("ascii") + KEY.encode("ascii")).digest())
+    accept = b64encode(sha1(key + KEY).digest())
     yield await(stream.write(SUCCESS_RESPONSE.format(accept=accept)))
 
 

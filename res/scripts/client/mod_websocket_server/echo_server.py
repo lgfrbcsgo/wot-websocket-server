@@ -1,12 +1,3 @@
-# WoT Websocket Server
-A single threaded, non blocking Websocket server which makes use of the `async` / `await` primitives of WoT.
-Continuation and binary frames are not supported.
-
-The server has a peer dependency on [WoT Async Server](https://github.com/lgfrbcsgo/wot-async-server).
-
-**The server should only ever be run on localhost.**
-
-```python
 from async import async, await
 from debug_utils import LOG_NOTE
 from mod_async_server import delay
@@ -46,8 +37,3 @@ def serve_forever():
             server.poll()
             # delay next loop iteration into the next frame.
             yield await(delay(0))
-
-
-# start serving, does not block the current thread.
-serve_forever()
-```
