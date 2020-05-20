@@ -17,11 +17,11 @@ SUCCESS_RESPONSE = (
 
 
 @async
-def perform_handshake(reader, writer):
+def perform_handshake(stream):
     parser = request_parser()
     headers = None
     while not headers:
-        data = yield await(reader(512))
+        data = yield await(stream.read(512))
         headers = parser.send(data)
 
     if "websocket" not in headers["upgrade"].lower():
@@ -35,7 +35,7 @@ def perform_handshake(reader, writer):
 
     key = headers['sec-websocket-key']
     accept = b64encode(sha1(key.encode("ascii") + KEY.encode("ascii")).digest())
-    yield await(writer(SUCCESS_RESPONSE.format(accept=accept)))
+    yield await(stream.write(SUCCESS_RESPONSE.format(accept=accept)))
 
 
 @skip_first
