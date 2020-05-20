@@ -1,7 +1,6 @@
 import struct
-
 from enum import IntEnum
-from typing import Union, Generator, Optional, Tuple, List
+from typing import Generator, List, Optional, Tuple, Union
 
 from mod_websocket_server.util import skip_first
 
@@ -12,14 +11,18 @@ class OpCode(IntEnum):
     BINARY = 0x2
     CLOSE = 0x8
     PING = 0x9
-    PONG = 0xa
+    PONG = 0xA
 
 
 class Mask(object):
     def __init__(self, masking_key):
         # type: (Union[bytes, bytearray]) -> None
         if len(masking_key) != 4:
-            raise ValueError("Masking-key must be exactly four bytes, {length} given.".format(length=len(masking_key)))
+            raise ValueError(
+                "Masking-key must be exactly four bytes, {length} given.".format(
+                    length=len(masking_key)
+                )
+            )
 
         self.masking_key = bytearray(masking_key)
 
@@ -59,7 +62,7 @@ class Frame(object):
         masked_bit = self.masked << 7
         if self.payload_length <= 125:
             frame += struct.pack("!B", masked_bit | self.payload_length)
-        elif self.payload_length < 2**16:
+        elif self.payload_length < 2 ** 16:
             frame += struct.pack("!B", masked_bit | 126)
             frame += struct.pack("!H", self.payload_length)
         else:
@@ -142,14 +145,14 @@ class Frame(object):
             while len(read_buffer) < 2:
                 read_buffer += yield
 
-            payload_length, = struct.unpack('!H', read_buffer[:2])
+            (payload_length,) = struct.unpack("!H", read_buffer[:2])
 
             read_buffer = read_buffer[2:]
         elif payload_length == 127:
             while len(read_buffer) < 4:
                 read_buffer += yield
 
-            payload_length, = struct.unpack('!Q', read_buffer[:4])
+            (payload_length,) = struct.unpack("!Q", read_buffer[:4])
 
             read_buffer = read_buffer[4:]
 

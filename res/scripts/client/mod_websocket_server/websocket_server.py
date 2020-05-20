@@ -16,7 +16,11 @@ def echo(server, stream):
             data = yield await(stream.read(512))
             frames = parser.send(data)
             for frame in frames:
-                LOG_NOTE("[{host}]:{port} sent frame {frame}".format(host=host, port=port, frame=frame))
+                LOG_NOTE(
+                    "[{host}]:{port} sent frame {frame}".format(
+                        host=host, port=port, frame=frame
+                    )
+                )
 
     finally:
         LOG_NOTE("[{host}]:{port} disconnected".format(host=host, port=port))
