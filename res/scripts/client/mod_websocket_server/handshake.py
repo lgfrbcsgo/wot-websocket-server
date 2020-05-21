@@ -63,11 +63,13 @@ def perform_handshake(stream, allowed_origins):
 def read_request(stream):
     # type: (Stream) -> _Future
     parser = request_parser()
-    while True:
+    for _ in range(8):
         data = yield await(stream.receive(512))
         request = parser.send(data)
         if request:
             raise AsyncReturn(request)
+    else:
+        raise AssertionError("Request too large")
 
 
 @skip_first
