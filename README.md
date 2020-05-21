@@ -13,7 +13,7 @@ from mod_async_server import Server, delay
 from mod_websocket_server import websocket_protocol
 
 
-@websocket_protocol
+@websocket_protocol()
 @async
 def echo_protocol(server, message_stream):
     host, port = message_stream.peer_addr

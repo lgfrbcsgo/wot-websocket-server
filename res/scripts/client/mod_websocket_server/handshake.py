@@ -1,7 +1,7 @@
 from base64 import b64encode
 from collections import namedtuple
 from hashlib import sha1
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Pattern, Union
 
 from async import _Future, async, await
 from BWUtil import AsyncReturn
@@ -23,8 +23,8 @@ Request = namedtuple(
 
 
 @async
-def perform_handshake(stream):
-    # type: (Stream) -> _Future
+def perform_handshake(stream, allowed_origins):
+    # type: (Stream, Optional[List[Union[Pattern, str]]]) -> _Future
     request = yield await(read_request(stream))  # type: Request
 
     if request.method.upper() != "GET":
@@ -41,6 +41,18 @@ def perform_handshake(stream):
 
     if request.headers["sec-websocket-version"] != "13":
         raise AssertionError("Unsupported Websocket version")
+
+    if allowed_origins and "origin" in request.headers:
+        origin = request.headers["origin"]
+        for allowed_origin in allowed_origins:
+            if isinstance(allowed_origin, Pattern) and allowed_origin.match(origin):
+                break
+            elif allowed_origin == origin:
+                break
+        else:
+            raise AssertionError(
+                "Origin {origin} is not allowed.".format(origin=origin)
+            )
 
     key = request.headers["sec-websocket-key"]
     accept = b64encode(sha1(key + KEY).digest())

@@ -1,6 +1,6 @@
 import struct
 from collections import deque
-from typing import Callable, Deque, Union
+from typing import Callable, Deque, List, Optional, Pattern, Union
 
 from async import _Future, async, await
 from BWUtil import AsyncReturn
@@ -86,12 +86,16 @@ class MessageStream(object):
         yield await(self._stream.send(frame.serialize()))
 
 
-def websocket_protocol(protocol):
-    # type: (Callable[[Server, MessageStream], _Future]) -> Callable[[Server, Stream], _Future]
-    @async
-    def wrapper(server, stream):
-        yield await(perform_handshake(stream))
-        message_stream = MessageStream(stream)
-        yield await(protocol(server, message_stream))
+def websocket_protocol(allowed_origins=None):
+    # type: (Optional[List[Union[Pattern, str]]]) -> ...
+    def decorator(protocol):
+        # type: (Callable[[Server, MessageStream], _Future]) -> Callable[[Server, Stream], _Future]
+        @async
+        def wrapper(server, stream):
+            yield await(perform_handshake(stream, allowed_origins))
+            message_stream = MessageStream(stream)
+            yield await(protocol(server, message_stream))
 
-    return wrapper
+        return wrapper
+
+    return decorator
