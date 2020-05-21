@@ -2,7 +2,8 @@
 A single threaded, non blocking Websocket server which makes use of the `async` / `await` primitives of WoT.
 Continuation and binary frames are not supported.
 
-The server has a peer dependency on [WoT Async Server](https://github.com/lgfrbcsgo/wot-async-server).
+The server has a peer dependency on [WoT Async Server](https://github.com/lgfrbcsgo/wot-async-server) and 
+[WoT Async](https://github.com/lgfrbcsgo/wot-async).
 
 **The server should only ever be run on localhost.**
 
