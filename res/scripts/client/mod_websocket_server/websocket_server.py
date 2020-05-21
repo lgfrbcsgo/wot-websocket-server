@@ -2,8 +2,7 @@ import struct
 from collections import deque
 from typing import Callable, Deque, List, Optional, Pattern, Union
 
-from async import _Future, async, await
-from BWUtil import AsyncReturn
+from mod_async import AsyncResult, Return, TimeoutExpired, async_task, timeout
 from mod_async_server import Server, Stream
 from mod_websocket_server.frame import Frame, OpCode
 from mod_websocket_server.handshake import perform_handshake
@@ -31,34 +30,34 @@ class MessageStream(object):
     def peer_addr(self):
         return self._stream.peer_addr
 
-    @async
+    @async_task
     def receive_message(self):
-        # type: () -> _Future
+        # type: () -> AsyncResult[unicode]
         while len(self._incoming_message_queue) == 0:
-            data = yield await(self._stream.receive(512))
+            data = yield self._stream.receive(512)
             frames = self._frame_parser.send(data)
             for frame in frames:
-                yield await(self._handle_frame(frame))
+                yield self._handle_frame(frame)
 
-        raise AsyncReturn(self._incoming_message_queue.popleft())
+        raise Return(self._incoming_message_queue.popleft())
 
-    @async
+    @async_task
     def send_message(self, payload):
-        # type: (Union[unicode, str]) -> _Future
+        # type: (Union[unicode, str]) -> AsyncResult
         frame = Frame(True, OpCode.TEXT, None, encode_utf8(payload))
-        yield await(self._send_frame(frame))
+        yield self._send_frame(frame)
 
-    @async
+    @async_task
     def close(self, code=1000, reason=""):
-        # type: (int, Union[unicode, str]) -> _Future
+        # type: (int, Union[unicode, str]) -> AsyncResult
         payload = struct.pack("!H", code) + encode_utf8(reason)
         close = Frame(True, OpCode.CLOSE, None, payload)
-        yield await(self._send_frame(close))
+        yield self._send_frame(close)
         self._stream.close()
 
-    @async
+    @async_task
     def _handle_frame(self, frame):
-        # type: (Frame) -> _Future
+        # type: (Frame) -> AsyncResult
         if not frame.fin:
             raise AssertionError("Message fragmentation is not supported.")
 
@@ -71,30 +70,33 @@ class MessageStream(object):
             raise AssertionError("Message fragmentation is not supported.")
         elif frame.op_code == OpCode.PING:
             pong = Frame(True, OpCode.PONG, None, frame.payload)
-            yield await(self._send_frame(pong))
+            yield self._send_frame(pong)
         elif frame.op_code == OpCode.CLOSE:
             if frame.payload:
                 (code,) = struct.unpack("!H", frame.payload[:2])
                 reason = frame.payload[2:].decode("utf8")
-                yield await(self.close(code, reason))
+                yield self.close(code, reason)
             else:
-                yield await(self.close())
+                yield self.close()
 
-    @async
+    @async_task
     def _send_frame(self, frame):
-        # type: (Frame) -> _Future
-        yield await(self._stream.send(frame.serialize()))
+        # type: (Frame) -> AsyncResult
+        yield self._stream.send(frame.serialize())
 
 
 def websocket_protocol(allowed_origins=None):
     # type: (Optional[List[Union[Pattern, str]]]) -> ...
     def decorator(protocol):
-        # type: (Callable[[Server, MessageStream], _Future]) -> Callable[[Server, Stream], _Future]
-        @async
+        # type: (Callable[[Server, MessageStream], AsyncResult]) -> Callable[[Server, Stream], AsyncResult]
+        @async_task
         def wrapper(server, stream):
-            yield await(perform_handshake(stream, allowed_origins))
+            try:
+                yield timeout(5, perform_handshake(stream, allowed_origins))
+            except TimeoutExpired:
+                return
             message_stream = MessageStream(stream)
-            yield await(protocol(server, message_stream))
+            yield protocol(server, message_stream)
 
         return wrapper
 

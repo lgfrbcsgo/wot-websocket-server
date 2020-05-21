@@ -3,8 +3,7 @@ from collections import namedtuple
 from hashlib import sha1
 from typing import Generator, List, Optional, Pattern, Union
 
-from async import _Future, async, await
-from BWUtil import AsyncReturn
+from mod_async import AsyncResult, Return, async_task
 from mod_async_server import Stream
 from mod_websocket_server.util import skip_first
 
@@ -22,10 +21,10 @@ Request = namedtuple(
 )
 
 
-@async
+@async_task
 def perform_handshake(stream, allowed_origins):
-    # type: (Stream, Optional[List[Union[Pattern, str]]]) -> _Future
-    request = yield await(read_request(stream))  # type: Request
+    # type: (Stream, Optional[List[Union[Pattern, str]]]) -> AsyncResult
+    request = yield read_request(stream)
 
     if request.method.upper() != "GET":
         raise AssertionError("Method must be GET")
@@ -56,18 +55,18 @@ def perform_handshake(stream, allowed_origins):
 
     key = request.headers["sec-websocket-key"]
     accept = b64encode(sha1(key + KEY).digest())
-    yield await(stream.send(SUCCESS_RESPONSE.format(accept=accept)))
+    yield stream.send(SUCCESS_RESPONSE.format(accept=accept))
 
 
-@async
+@async_task
 def read_request(stream):
-    # type: (Stream) -> _Future
+    # type: (Stream) -> AsyncResult[Request]
     parser = request_parser()
     for _ in range(8):
-        data = yield await(stream.receive(512))
+        data = yield stream.receive(512)
         request = parser.send(data)
         if request:
-            raise AsyncReturn(request)
+            raise Return(request)
     else:
         raise AssertionError("Request too large")
 
