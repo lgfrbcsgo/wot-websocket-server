@@ -1,10 +1,9 @@
 from base64 import b64encode
 from collections import namedtuple
 from hashlib import sha1
-from typing import Generator, List, Optional, Pattern, Union
+from typing import Pattern
 
-from mod_async import AsyncResult, Return, async_task
-from mod_async_server import Stream
+from mod_async import Return, async_task
 from mod_websocket_server.util import skip_first
 
 KEY = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -23,7 +22,6 @@ Request = namedtuple(
 
 @async_task
 def perform_handshake(stream, allowed_origins):
-    # type: (Stream, Optional[List[Union[Pattern, str]]]) -> AsyncResult
     request = yield read_request(stream)
 
     if request.method.upper() != "GET":
@@ -60,7 +58,6 @@ def perform_handshake(stream, allowed_origins):
 
 @async_task
 def read_request(stream):
-    # type: (Stream) -> AsyncResult[Request]
     parser = request_parser()
     for _ in range(8):
         data = yield stream.receive(512)
@@ -73,7 +70,6 @@ def read_request(stream):
 
 @skip_first
 def header_line_splitter():
-    # type: () -> Generator[List[bytes], bytes, None]
     read_buffer = bytes()
     while True:
         parts = read_buffer.split("\r\n")
@@ -83,7 +79,6 @@ def header_line_splitter():
 
 @skip_first
 def request_parser():
-    # type: () -> Generator[Optional[Request], bytes, None]
     splitter = header_line_splitter()
     lines = []
     headers = dict()

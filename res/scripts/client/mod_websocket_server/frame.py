@@ -16,7 +16,6 @@ class OpCode(IntEnum):
 
 class Mask(object):
     def __init__(self, masking_key):
-        # type: (Union[bytes, bytearray]) -> None
         if len(masking_key) != 4:
             raise ValueError(
                 "Masking-key must be exactly four bytes, {length} given.".format(
@@ -27,7 +26,6 @@ class Mask(object):
         self.masking_key = bytearray(masking_key)
 
     def mask(self, data):
-        # type: (Union[bytes, bytearray]) -> bytearray
         data = bytearray(data)
         for i in xrange(len(data)):
             data[i] ^= self.masking_key[i % 4]
@@ -36,7 +34,6 @@ class Mask(object):
 
 class Frame(object):
     def __init__(self, fin, op_code, mask, payload):
-        # type: (bool, OpCode, Optional[Mask], Union[bytes, bytearray]) -> None
         self.fin = fin
         self.op_code = op_code
         self.mask = mask
@@ -44,16 +41,13 @@ class Frame(object):
 
     @property
     def masked(self):
-        # type: () -> bool
         return self.mask is not None
 
     @property
     def payload_length(self):
-        # type: () -> long
         return len(self.payload)
 
     def serialize(self):
-        # type: () -> bytearray
         frame = bytearray()
 
         fin_bit = self.fin << 7
@@ -80,7 +74,6 @@ class Frame(object):
     @classmethod
     @skip_first
     def multi_parser(cls):
-        # type: () -> Generator[List[Frame], Union[bytes, bytearray], None]
         parser = cls.parser()
         remaining = None
         frames = []
@@ -100,7 +93,6 @@ class Frame(object):
     @staticmethod
     @skip_first
     def parser():
-        # type: () -> Generator[Optional[Tuple[Frame, bytearray]], Union[bytes, bytearray], None]
         read_buffer = bytearray()
 
         # ------------------------------------------
