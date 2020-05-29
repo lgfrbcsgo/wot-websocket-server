@@ -13,7 +13,8 @@ def encode_utf8(data):
 
 
 class MessageStream(object):
-    def __init__(self, stream):
+    def __init__(self, stream, handshake_headers):
+        self.handshake_headers = handshake_headers
         self._stream = stream
         self._frame_parser = Frame.multi_parser()
         self._incoming_message_queue = deque()
@@ -81,11 +82,16 @@ def websocket_protocol(allowed_origins=None):
         @async_task
         def wrapper(server, stream):
             try:
-                yield timeout(5, perform_handshake(stream, allowed_origins))
+                handshake_headers = yield timeout(
+                    5, perform_handshake(stream, allowed_origins)
+                )
             except TimeoutExpired:
                 return
-            message_stream = MessageStream(stream)
-            yield protocol(server, message_stream)
+            message_stream = MessageStream(stream, handshake_headers)
+            try:
+                yield protocol(server, message_stream)
+            finally:
+                yield message_stream.close()
 
         return wrapper
 

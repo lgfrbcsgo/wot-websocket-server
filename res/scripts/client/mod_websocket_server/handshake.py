@@ -54,6 +54,7 @@ def perform_handshake(stream, allowed_origins):
     key = request.headers["sec-websocket-key"]
     accept = b64encode(sha1(key + KEY).digest())
     yield stream.send(SUCCESS_RESPONSE.format(accept=accept))
+    raise Return(request.headers)
 
 
 @async_task
