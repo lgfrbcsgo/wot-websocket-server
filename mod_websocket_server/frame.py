@@ -1,6 +1,5 @@
 import struct
 from enum import IntEnum
-from typing import Generator, List, Optional, Tuple, Union
 
 from mod_websocket_server.util import skip_first
 
