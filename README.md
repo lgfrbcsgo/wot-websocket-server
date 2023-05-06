@@ -9,7 +9,7 @@ The server has a peer dependency on [WoT Async Server](https://github.com/lgfrbc
 
 ```python
 from debug_utils import LOG_NOTE
-from mod_async import async_task, auto_run, delay
+from mod_async import async_task, delay
 from mod_async_server import Server
 from mod_websocket_server import websocket_protocol
 
@@ -39,7 +39,6 @@ def echo_protocol(server, message_stream):
         LOG_NOTE("[{host}]:{port} disconnected".format(host=host, port=port))
 
 
-@auto_run
 @async_task
 def serve_forever():
     # open server on localhost:4000 using the `echo_protocol` for serving individual connections.
