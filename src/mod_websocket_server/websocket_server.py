@@ -2,6 +2,7 @@ import struct
 from collections import deque
 
 from mod_async import Return, TimeoutExpired, async_task, timeout
+from mod_async_server import StreamClosed
 from mod_websocket_server.frame import Frame, OpCode
 from mod_websocket_server.handshake import perform_handshake
 
@@ -90,7 +91,11 @@ def websocket_protocol(allowed_origins=None):
             message_stream = MessageStream(stream, handshake_headers)
             try:
                 yield protocol(server, message_stream)
-            finally:
+            except StreamClosed:
+                pass
+            except Exception:
+                yield message_stream.close()
+            else:
                 yield message_stream.close()
 
         return wrapper
