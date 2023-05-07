@@ -1,10 +1,12 @@
 import struct
+import sys
 from collections import deque
 
 from mod_async import Return, TimeoutExpired, async_task, timeout
 from mod_async_server import StreamClosed
 from mod_websocket_server.frame import Frame, OpCode
 from mod_websocket_server.handshake import perform_handshake
+from mod_websocket_server.logging import LOG_NOTE
 
 
 def encode_utf8(data):
@@ -45,10 +47,12 @@ class MessageStream(object):
 
     @async_task
     def close(self, code=1000, reason=""):
-        payload = struct.pack("!H", code) + encode_utf8(reason)
-        close = Frame(True, OpCode.CLOSE, None, payload)
-        yield self._send_frame(close)
-        self._stream.close()
+        try:
+            payload = struct.pack("!H", code) + encode_utf8(reason)
+            close = Frame(True, OpCode.CLOSE, None, payload)
+            yield self._send_frame(close)
+        finally:
+            self._stream.close()
 
     @async_task
     def _handle_frame(self, frame):
@@ -88,15 +92,32 @@ def websocket_protocol(allowed_origins=None):
                 )
             except TimeoutExpired:
                 return
+
+            host, port = stream.peer_addr
+            origin = handshake_headers.get("origin")
+            LOG_NOTE(
+                "Websocket: {origin} ([{host}]:{port}) connected.".format(
+                    origin=origin, host=host, port=port
+                )
+            )
+
             message_stream = MessageStream(stream, handshake_headers)
             try:
                 yield protocol(server, message_stream)
             except StreamClosed:
                 pass
             except Exception:
+                t, v, tb = sys.exc_info()
                 yield message_stream.close()
+                raise t, v, tb
             else:
                 yield message_stream.close()
+            finally:
+                LOG_NOTE(
+                    "Websocket: {origin} ([{host}]:{port}) disconnected.".format(
+                        origin=origin, host=host, port=port
+                    )
+                )
 
         return wrapper
 
