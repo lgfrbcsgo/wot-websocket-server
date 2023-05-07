@@ -13,7 +13,7 @@ DESCRIPTION = "A single threaded, non blocking Websocket server for WoT mods whi
 
 RELEASE_DEPENDENCIES = [
     "https://github.com/lgfrbcsgo/wot-async/releases/download/v0.3.2/lgfrbcsgo.async_0.3.2.wotmod",
-    "https://github.com/lgfrbcsgo/wot-async-server/releases/download/v0.4.1/lgfrbcsgo.async-server_0.4.1.wotmod",
+    "https://github.com/lgfrbcsgo/wot-async-server/releases/download/v0.4.2/lgfrbcsgo.async-server_0.4.2.wotmod",
 ]
 
 

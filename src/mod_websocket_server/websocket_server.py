@@ -47,11 +47,13 @@ class MessageStream(object):
 
     @async_task
     def close(self, code=1000, reason=""):
+        payload = struct.pack("!H", code) + encode_utf8(reason)
+        close = Frame(True, OpCode.CLOSE, None, payload)
         try:
-            payload = struct.pack("!H", code) + encode_utf8(reason)
-            close = Frame(True, OpCode.CLOSE, None, payload)
             yield self._send_frame(close)
-        finally:
+        except StreamClosed:
+            pass
+        else:
             self._stream.close()
 
     @async_task
