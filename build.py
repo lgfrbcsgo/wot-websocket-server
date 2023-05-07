@@ -12,8 +12,8 @@ NAME = "Websocket Server"
 DESCRIPTION = "A single threaded, non blocking Websocket server for WoT mods which makes use of the `async` / `await`."
 
 RELEASE_DEPENDENCIES = [
-    "https://github.com/lgfrbcsgo/wot-async/releases/download/v0.3.0/lgfrbcsgo.async_0.3.0.wotmod",
-    "https://github.com/lgfrbcsgo/wot-async-server/releases/download/v0.4.0/lgfrbcsgo.async-server_0.4.0.wotmod",
+    "https://github.com/lgfrbcsgo/wot-async/releases/download/v0.3.2/lgfrbcsgo.async_0.3.2.wotmod",
+    "https://github.com/lgfrbcsgo/wot-async-server/releases/download/v0.4.1/lgfrbcsgo.async-server_0.4.1.wotmod",
 ]
 
 
