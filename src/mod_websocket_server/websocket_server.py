@@ -1,5 +1,4 @@
 import struct
-import sys
 from collections import deque
 
 from mod_async import Return, TimeoutExpired, async_task, timeout
@@ -53,7 +52,7 @@ class MessageStream(object):
             yield self._send_frame(close)
         except StreamClosed:
             pass
-        else:
+        finally:
             self._stream.close()
 
     @async_task
@@ -106,20 +105,13 @@ def websocket_protocol(allowed_origins=None):
             message_stream = MessageStream(stream, handshake_headers)
             try:
                 yield protocol(server, message_stream)
-            except StreamClosed:
-                pass
-            except Exception:
-                t, v, tb = sys.exc_info()
-                yield message_stream.close()
-                raise t, v, tb
-            else:
-                yield message_stream.close()
             finally:
                 LOG_NOTE(
                     "Websocket: {origin} ([{host}]:{port}) disconnected.".format(
                         origin=origin, host=host, port=port
                     )
                 )
+                yield message_stream.close()
 
         return wrapper
 
